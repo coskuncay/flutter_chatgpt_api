@@ -114,16 +114,10 @@ class _ChatPageState extends State<ChatPage> {
                 isLoading = true;
               },
             );
-            // Save the input and clearing the text field.
             var input = _textController.text;
             _textController.clear();
-
-            // Needs a delay or the scroll won't always work.
             Future.delayed(const Duration(milliseconds: 50))
                 .then((_) => _scrollDown());
-
-            // Send the message to the API, use conversationId and parentMessageId
-            // to keep the thread context.
             var newMessage = await _api.sendMessage(
               input,
               conversationId: _conversationId,
@@ -141,7 +135,6 @@ class _ChatPageState extends State<ChatPage> {
               );
             });
             _textController.clear();
-            // Needs a delay or the scroll won't always work.
             Future.delayed(const Duration(milliseconds: 50))
                 .then((_) => _scrollDown());
           },
