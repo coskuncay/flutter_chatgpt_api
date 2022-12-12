@@ -30,5 +30,6 @@ migrate_working_dir/
 build/
 
 test/session_token.dart
-
 example/lib/session_token.dart
+test/clearance_token.dart
+example/lib/clearance_token.dart

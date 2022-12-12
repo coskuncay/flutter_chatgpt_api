@@ -1,3 +1,4 @@
+import 'package:example/clearance_token.dart';
 import 'package:example/session_token.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chatgpt_api/flutter_chatgpt_api.dart';
@@ -42,7 +43,10 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
-    _api = ChatGPTApi(sessionToken: SESSION_TOKEN);
+    _api = ChatGPTApi(
+      sessionToken: SESSION_TOKEN,
+      clearanceToken: CLEARANCE_TOKEN,
+    );
     isLoading = false;
   }
 

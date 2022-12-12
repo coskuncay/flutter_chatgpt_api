@@ -1,6 +1,7 @@
 library flutter_chatgpt_api;
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_chatgpt_api/src/models/models.dart';
 import 'package:flutter_chatgpt_api/src/utils/utils.dart';
@@ -11,18 +12,35 @@ part 'src/models/chat_message.model.dart';
 
 class ChatGPTApi {
   String sessionToken;
+  String clearanceToken;
   String? apiBaseUrl;
   String backendApiBaseUrl;
   String userAgent;
 
   final ExpiryMap<String, String> _accessTokenCache =
       ExpiryMap<String, String>();
+
   ChatGPTApi({
     required this.sessionToken,
+    required this.clearanceToken,
     this.apiBaseUrl = 'https://chat.openai.com/api',
     this.backendApiBaseUrl = 'https://chat.openai.com/backend-api',
     this.userAgent = defaultUserAgent,
   });
+
+  Map<String, String> defaultHeaders = {
+    'user-agent': defaultUserAgent,
+    'x-openai-assistant-app-id': '',
+    'accept-language': 'en-US,en;q=0.9',
+    HttpHeaders.accessControlAllowOriginHeader: 'https://chat.openai.com',
+    HttpHeaders.refererHeader: 'https://chat.openai.com/chat',
+    'sec-ch-ua':
+        '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
+    'sec-ch-ua-platform': '"Windows"',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-origin',
+  };
 
   Future<ChatResponse> sendMessage(
     String message, {
@@ -51,9 +69,21 @@ class ChatGPTApi {
     final response = await http.post(
       Uri.parse(url),
       headers: {
+        'user-agent': defaultUserAgent,
+        'x-openai-assistant-app-id': '',
+        'accept-language': 'en-US,en;q=0.9',
+        HttpHeaders.accessControlAllowOriginHeader: 'https://chat.openai.com',
+        HttpHeaders.refererHeader: 'https://chat.openai.com/chat',
+        'sec-ch-ua':
+            '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
         'Authorization': 'Bearer $accessToken',
         'Content-Type': 'application/json',
-        'user-agent': userAgent,
+        'Accept': 'text/event-stream',
+        'Cookie': 'cf_clearance=$clearanceToken'
       },
       body: body.toJson(),
     );
@@ -95,11 +125,15 @@ class ChatGPTApi {
     }
 
     try {
-      final res =
-          await http.get(Uri.parse('$apiBaseUrl/auth/session'), headers: {
-        'cookie': '__Secure-next-auth.session-token=$sessionToken',
-        'user-agent': userAgent,
-      });
+      final res = await http.get(
+        Uri.parse('$apiBaseUrl/auth/session'),
+        headers: {
+          'cookie':
+              'cf_clearance=$clearanceToken;__Secure-next-auth.session-token=$sessionToken',
+          'accept': '*/*',
+          ...defaultHeaders,
+        },
+      );
 
       if (res.statusCode != 200) {
         throw Exception('Failed to refresh access token');
@@ -121,7 +155,7 @@ class ChatGPTApi {
 }
 
 const defaultUserAgent =
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36';
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36';
 
 const _errorMessages = [
   "{\"detail\":\"Hmm...something seems to have gone wrong. Maybe try me again in a little bit.\"}",

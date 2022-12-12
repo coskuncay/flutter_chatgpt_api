@@ -1,12 +1,13 @@
 import 'package:flutter_chatgpt_api/flutter_chatgpt_api.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Provide your own session token to run tests
+import 'clearance_token.dart';
 import 'session_token.dart';
 
 void main() {
   test('do basic prompt', () async {
-    final api = ChatGPTApi(sessionToken: SESSION_TOKEN);
+    final api = ChatGPTApi(
+        sessionToken: SESSION_TOKEN, clearanceToken: CLEARANCE_TOKEN);
     const prompt =
         'Write a python version of bubble sort. Do not include example usage.';
 
