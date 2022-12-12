@@ -1,6 +1,6 @@
 name: flutter_chatgpt_api
-description: Flutter/Dart API around ChatGPT.
-version: 1.0.0
+description: Flutter/Dart API around ChatGPT for the unofficial ChatGPT API.
+version: 1.1.0
 homepage: https://github.com/coskuncay/flutter_chatgpt_api
 repository: https://github.com/coskuncay/flutter_chatgpt_api
 
