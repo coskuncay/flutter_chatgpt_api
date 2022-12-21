@@ -9,7 +9,7 @@ This version have been updated to use Puppeteer to log in to ChatGPT and extract
 - [Demo](#demo)
 - [Installation](#installation)
 - [Usage](#usage) 
-- [SessionToken and ClearanceToken](#sessiontoken) 
+- [SessionToken, ClearanceToken and UserAgent](#sessiontoken) 
 - [License](#license)
 
 :warning: Be Careful!
@@ -36,6 +36,7 @@ import 'package:flutter_chatgpt_api/flutter_chatgpt_api.dart';
  _api = ChatGPTApi(
        sessionToken: SESSION_TOKEN,
        clearanceToken: CLEARANCE_TOKEN,
+       userAgent: USER_AGENT,
      );
 
 setState(() {
@@ -84,6 +85,9 @@ Copy the value for __Secure-next-auth.session-token and save it to your environm
 Copy the value for cf_clearance and save it to your environment.
 `example/lib/clearance_token.dart`
 
+Copy the value for user_agent and save it to your environment.
+`example/lib/user_agent.dart`
+
 Should look something like this:
 ```dart
 const SESSION_TOKEN = '__Secure-next-auth.session-token from https://chat.openai.com/chat';
@@ -91,6 +95,10 @@ const SESSION_TOKEN = '__Secure-next-auth.session-token from https://chat.openai
 
 ```dart
 const CLEARANCE_TOKEN = 'cf_clearance token from https://chat.openai.com/chat';
+```
+
+```dart
+const USER_AGENT = 'user_agent from https://chat.openai.com/chat';
 ```
 ## Credit
 

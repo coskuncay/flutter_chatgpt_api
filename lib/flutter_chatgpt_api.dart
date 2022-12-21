@@ -28,20 +28,6 @@ class ChatGPTApi {
     this.userAgent = defaultUserAgent,
   });
 
-  Map<String, String> defaultHeaders = {
-    'user-agent': defaultUserAgent,
-    'x-openai-assistant-app-id': '',
-    'accept-language': 'en-US,en;q=0.9',
-    HttpHeaders.accessControlAllowOriginHeader: 'https://chat.openai.com',
-    HttpHeaders.refererHeader: 'https://chat.openai.com/chat',
-    'sec-ch-ua':
-        '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
-    'sec-ch-ua-platform': '"Windows"',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-origin',
-  };
-
   Future<ChatResponse> sendMessage(
     String message, {
     String? conversationId,
@@ -69,7 +55,7 @@ class ChatGPTApi {
     final response = await http.post(
       Uri.parse(url),
       headers: {
-        'user-agent': defaultUserAgent,
+        'user-agent': userAgent,
         'x-openai-assistant-app-id': '',
         'accept-language': 'en-US,en;q=0.9',
         HttpHeaders.accessControlAllowOriginHeader: 'https://chat.openai.com',
@@ -130,8 +116,8 @@ class ChatGPTApi {
         headers: {
           'cookie':
               'cf_clearance=$clearanceToken;__Secure-next-auth.session-token=$sessionToken',
+          'user-agent': userAgent,
           'accept': '*/*',
-          ...defaultHeaders,
         },
       );
 
