@@ -33,3 +33,5 @@ test/session_token.dart
 example/lib/session_token.dart
 test/clearance_token.dart
 example/lib/clearance_token.dart
+test/user_agent.dart
+example/lib/user_agent.dart

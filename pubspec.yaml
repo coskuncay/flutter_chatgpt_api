@@ -5,7 +5,7 @@ homepage: https://github.com/coskuncay/flutter_chatgpt_api
 repository: https://github.com/coskuncay/flutter_chatgpt_api
 
 environment:
-  sdk: '>=2.18.2 <3.0.0'
+  sdk: '>=2.18.2'
   flutter: ">=1.17.0"
 
 dependencies: 

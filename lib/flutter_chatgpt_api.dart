@@ -16,6 +16,7 @@ class ChatGPTApi {
   String? apiBaseUrl;
   String backendApiBaseUrl;
   String userAgent;
+  bool debug;
 
   final ExpiryMap<String, String> _accessTokenCache =
       ExpiryMap<String, String>();
@@ -23,24 +24,11 @@ class ChatGPTApi {
   ChatGPTApi({
     required this.sessionToken,
     required this.clearanceToken,
+    required this.userAgent,
     this.apiBaseUrl = 'https://chat.openai.com/api',
     this.backendApiBaseUrl = 'https://chat.openai.com/backend-api',
-    this.userAgent = defaultUserAgent,
+    this.debug = false,
   });
-
-  Map<String, String> defaultHeaders = {
-    'user-agent': defaultUserAgent,
-    'x-openai-assistant-app-id': '',
-    'accept-language': 'en-US,en;q=0.9',
-    HttpHeaders.accessControlAllowOriginHeader: 'https://chat.openai.com',
-    HttpHeaders.refererHeader: 'https://chat.openai.com/chat',
-    'sec-ch-ua':
-        '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
-    'sec-ch-ua-platform': '"Windows"',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-origin',
-  };
 
   Future<ChatResponse> sendMessage(
     String message, {
@@ -66,31 +54,47 @@ class ChatGPTApi {
 
     final url = '$backendApiBaseUrl/conversation';
 
+    var headersConv = {
+      'cookie': 'cf_clearance=$clearanceToken',
+      'user-agent': userAgent,
+      'x-openai-assistant-app-id': '',
+      'accept-language': 'en-US,en;q=0.9',
+      HttpHeaders.accessControlAllowOriginHeader: 'https://chat.openai.com',
+      HttpHeaders.refererHeader: 'https://chat.openai.com/chat',
+      'sec-ch-ua':
+          '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
+      'sec-ch-ua-platform': '"Mac"',
+      'sec-fetch-dest': 'empty',
+      'sec-fetch-mode': 'cors',
+      'sec-fetch-site': 'same-origin',
+      'authorization': 'Bearer $accessToken',
+      'content-Type': 'application/json',
+      'accept': 'text/event-stream',
+    };
+
+    if (debug) {
+      print('== REQUEST ==');
+      print('POST $url');
+      print('Headers : $headersConv');
+      print('Body : ${body.toJson()}');
+    }
+
     final response = await http.post(
       Uri.parse(url),
-      headers: {
-        'user-agent': defaultUserAgent,
-        'x-openai-assistant-app-id': '',
-        'accept-language': 'en-US,en;q=0.9',
-        HttpHeaders.accessControlAllowOriginHeader: 'https://chat.openai.com',
-        HttpHeaders.refererHeader: 'https://chat.openai.com/chat',
-        'sec-ch-ua':
-            '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
-        'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-        'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'application/json',
-        'Accept': 'text/event-stream',
-        'Cookie': 'cf_clearance=$clearanceToken'
-      },
+      headers: headersConv,
       body: body.toJson(),
     );
 
+    if (debug) {
+      print('== RESPONSE ==');
+      print('HTTP code : ${response.statusCode}');
+      print('Headers : ${response.headers}');
+      print('Body : ${response.body}');
+    }
+
     if (response.statusCode != 200) {
       if (response.statusCode == 429) {
-        throw Exception('Rate limited');
+        throw Exception(response.body);
       } else {
         throw Exception('Failed to send message');
       }
@@ -118,28 +122,111 @@ class ChatGPTApi {
     }
   }
 
+  Future<bool> isAuthenticated() async {
+    try {
+      await _refreshAccessToken();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<String> sendModeration(String input) async {
+    final accessToken = await _refreshAccessToken();
+
+    final body = ModerationsBody(
+      input: input,
+      model: 'text-moderation-playground',
+    );
+
+    final url = '$backendApiBaseUrl/moderations';
+
+    var headersConv = {
+      'user-agent': userAgent,
+      'x-openai-assistant-app-id': '',
+      'accept-language': 'en-US,en;q=0.9',
+      HttpHeaders.accessControlAllowOriginHeader: 'https://chat.openai.com',
+      HttpHeaders.refererHeader: 'https://chat.openai.com/chat',
+      'sec-ch-ua':
+          '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
+      'sec-ch-ua-platform': '"Mac"',
+      'sec-fetch-dest': 'empty',
+      'sec-fetch-mode': 'cors',
+      'sec-fetch-site': 'same-origin',
+      'authorization': 'Bearer $accessToken',
+      'content-Type': 'application/json',
+      'accept': '*/*',
+      'cookie': 'cf_clearance=$clearanceToken',
+    };
+
+    if (debug) {
+      print('== REQUEST ==');
+      print('POST $url');
+      print('Headers : $headersConv');
+      print('Body : ${body.toJson()}');
+    }
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: headersConv,
+      body: body.toJson(),
+    );
+
+    if (debug) {
+      print('== RESPONSE ==');
+      print('HTTP code : ${response.statusCode}');
+      print('Headers : ${response.headers}');
+      print('Body : ${response.body}');
+    }
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 429) {
+        throw Exception('Rate limited');
+      } else {
+        throw Exception('Failed to send message');
+      }
+    } else if (_errorMessages.contains(response.body)) {
+      throw Exception('OpenAI returned an error');
+    }
+
+    return response.body;
+  }
+
   Future<String> _refreshAccessToken() async {
     final cachedAccessToken = _accessTokenCache['KEY_ACCESS_TOKEN'];
     if (cachedAccessToken != null) {
       return cachedAccessToken;
     }
+    var headersSession = {
+      'cookie':
+          'cf_clearance=$clearanceToken;__Secure-next-auth.session-token=$sessionToken',
+      'user-agent': userAgent,
+      'accept': '*/*',
+    };
+
+    if (debug) {
+      print('POST $apiBaseUrl/auth/session');
+      print('Headers : $headersSession');
+    }
 
     try {
-      final res = await http.get(
+      final response = await http.get(
         Uri.parse('$apiBaseUrl/auth/session'),
-        headers: {
-          'cookie':
-              'cf_clearance=$clearanceToken;__Secure-next-auth.session-token=$sessionToken',
-          'accept': '*/*',
-          ...defaultHeaders,
-        },
+        headers: headersSession,
       );
 
-      if (res.statusCode != 200) {
+      if (debug) {
+        print('== RESPONSE ==');
+        print('HTTP code : ${response.statusCode}');
+        print('Headers : ${response.headers}');
+        print('Body : ${response.body}');
+      }
+
+      if (response.statusCode != 200) {
         throw Exception('Failed to refresh access token');
       }
 
-      final accessToken = jsonDecode(res.body)['accessToken'];
+      final accessToken = jsonDecode(response.body)['accessToken'];
 
       if (accessToken == null) {
         throw Exception(
@@ -153,9 +240,6 @@ class ChatGPTApi {
     }
   }
 }
-
-const defaultUserAgent =
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36';
 
 const _errorMessages = [
   "{\"detail\":\"Hmm...something seems to have gone wrong. Maybe try me again in a little bit.\"}",

@@ -1,5 +1,7 @@
-import 'package:example/clearance_token.dart';
-import 'package:example/session_token.dart';
+import 'session_token.dart';
+import 'clearance_token.dart';
+import 'user_agent.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_chatgpt_api/flutter_chatgpt_api.dart';
 
@@ -46,6 +48,8 @@ class _ChatPageState extends State<ChatPage> {
     _api = ChatGPTApi(
       sessionToken: SESSION_TOKEN,
       clearanceToken: CLEARANCE_TOKEN,
+      userAgent: USER_AGENT,
+      debug: true,
     );
     isLoading = false;
   }
@@ -122,6 +126,7 @@ class _ChatPageState extends State<ChatPage> {
             _textController.clear();
             Future.delayed(const Duration(milliseconds: 50))
                 .then((_) => _scrollDown());
+            await _api.sendModeration(input);
             var newMessage = await _api.sendMessage(
               input,
               conversationId: _conversationId,
