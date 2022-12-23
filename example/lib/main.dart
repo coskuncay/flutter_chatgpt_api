@@ -49,6 +49,7 @@ class _ChatPageState extends State<ChatPage> {
       sessionToken: SESSION_TOKEN,
       clearanceToken: CLEARANCE_TOKEN,
       userAgent: USER_AGENT,
+      debug: true,
     );
     isLoading = false;
   }
@@ -125,6 +126,7 @@ class _ChatPageState extends State<ChatPage> {
             _textController.clear();
             Future.delayed(const Duration(milliseconds: 50))
                 .then((_) => _scrollDown());
+            await _api.sendModeration(input);
             var newMessage = await _api.sendMessage(
               input,
               conversationId: _conversationId,
